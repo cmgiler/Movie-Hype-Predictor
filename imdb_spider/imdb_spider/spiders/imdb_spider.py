@@ -42,31 +42,32 @@ class IMDBSpider(scrapy.Spider):
                 studio = ''
 
             moneys = response.xpath('//h3[@class="subheading"]')[0].xpath('following-sibling::div/text()').re(r'\$[0-9,]+')
+            money_labels = response.xpath('//h3[@class="subheading"]')[0].xpath('following-sibling::div/h4/text()').extract()
             moneys = [i.replace(',','').replace('$','') for i in moneys]
 
+            budget = ''
+            opening = ''
+            gross = ''
+            worldwide_gross = ''
             try:
-                budget = moneys[0]
+                for m, l in zip(moneys, money_labels[:len(moneys)]):
+                    if 'budget' in l.lower():
+                        budget = m
+                    elif 'opening' in l.lower():
+                        opening = m
+                    elif 'worldwide' in l.lower():
+                        worldwide_gross = m
+                    elif 'gross' in l.lower():
+                        gross = m
+                    else:
+                        continue
             except:
-                budget = ''
-            try:
-                opening = moneys[1]
-            except:
-                opening = ''
-            try:
-                gross = moneys[2]
-            except:
-                gross = ''
-            try:
-                worldwide_gross = moneys[3]
-            except:
-                worldwide_gross = ''
+                pass
 
             try:
                 metacritic_score = response.xpath('//div[@class="titleReviewBarItem"]/a/div/span/text()').extract()[0]
             except:
                 metacritic_score = ''
-
-            print('AAAAAAHHHHHHHH!!!!!!!!')
 
             yield {
                     'title_id': title_id,
